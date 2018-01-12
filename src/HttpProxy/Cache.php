@@ -37,8 +37,6 @@ class Cache
      */
     public function getData(callable $callback): array
     {
-        $filename = $this->getFilename();
-
         $data = [
             'headers' => [
                 'Content-Type'  => null,
@@ -48,8 +46,10 @@ class Cache
             'body' => null,
         ];
 
+        $filename = $this->getFilename();
+
         if (file_exists($filename)
-            || filemtime($filename) > time() - (3600 * 24 * $this->cacheDays)) {
+            && filemtime($filename) > time() - (3600 * 24 * $this->cacheDays)) {
             $data['body'] = file_get_contents($filename);
             $firstLine = strpos($data['body'], "\n");
             $data['headers'] = [
@@ -60,8 +60,11 @@ class Cache
             $data['body'] = substr($data['body'], $firstLine + 1);
         } elseif($response = $callback()) {
             $data['body'] = $response->body;
-            $data['headers']['Content-Type'] = $response->headers['Content-Type'];
-            file_put_contents($filename, $data['headers']['Content-Type'] . "\n" . $data['body']);
+            $data['headers']['Content-Type'] = is_array($response->headers['Content-Type'])
+                ? array_shift($response->headers['Content-Type'])
+                : $response->headers['Content-Type']
+            ;
+            file_put_contents($this->getFilename(true), $data['headers']['Content-Type'] . "\n" . $data['body']);
         }
 
         if ('' === (string) $data['headers']['Content-Type']) {
@@ -74,14 +77,17 @@ class Cache
     /**
      * getFilename
      *
+     * @param bool $create
+     *
      * @return string
      */
-    private function getFilename(): string
+    private function getFilename(bool $create = false): string
     {
         $directory = chunk_split(substr($this->hash, 0, 6), 1, '/');
         $directory = CACHE_DIR . '/' . $directory;
 
-        if (!is_dir($directory)) {
+        if (true === $create
+            && !is_dir($directory)) {
             mkdir($directory, 0775, true);
         }
 

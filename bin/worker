@@ -1,5 +1,6 @@
+#!/usr/bin/php
 <?php
 
 require realpath(__DIR__) . '/../src/bootstrap.php';
 
-(new HttpProxy\Kernel())->run();
+(new HttpProxy\Gearman())->worker();

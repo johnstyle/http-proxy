@@ -29,9 +29,11 @@ class Proxy
     /**
      * crawl
      *
-     * @return null
+     * @param int $sleep
+     *
+     * @return array|null
      */
-    public function crawl()
+    public function crawl(int $sleep = 0)
     {
         if (!$this->isValidUrl()) {
             return null;
@@ -39,10 +41,15 @@ class Proxy
 
         $url = $this->getParameter('url');
 
-        return (new Cache($url))->getData(function () use ($url) {
+        return (new Cache($url))->getData(function () use ($url, $sleep) {
+            sleep($sleep);
+
             try {
 
                 Request::timeout(5);
+                Request::curlOpts([
+                    CURLOPT_INTERFACE => $this->getInterface(),
+                ]);
 
                 $response = Request::get($url, [
                     'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -85,5 +92,15 @@ class Proxy
     private function getParameter($name):? string
     {
         return $this->parameters[$name] ?? null;
+    }
+
+    /**
+     * getInterface
+     *
+     * @return string
+     */
+    private function getInterface(): string
+    {
+        return array_rand(array_map('trim', explode(',', $_SERVER['PROXY_INTERFACES'])));
     }
 }

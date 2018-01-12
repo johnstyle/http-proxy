@@ -10,33 +10,11 @@ namespace HttpProxy;
  */
 class Kernel
 {
-    /** @var Proxy $proxy */
-    private $proxy;
-
-    /**
-     * Kernel constructor.
-     */
-    public function __construct()
-    {
-        $parameters = [];
-        foreach ($_GET as $name => $value) {
-            $value = trim($value);
-            if ('' === $value) {
-                continue;
-            }
-            $parameters[$name] = $value;
-        }
-
-        $this->proxy = new Proxy($parameters);
-    }
-
     /**
      * send
      */
-    public function send()
+    public function run()
     {
-        header('X-Robots-Tag: noindex, nofollow', true);
-
         $headers = getallheaders();
         if (!isset($headers['X-Token'])
             || $headers['X-Token'] !== $_SERVER['PROXY_TOKEN']) {
@@ -44,7 +22,40 @@ class Kernel
             return;
         }
 
-        $data = $this->proxy->crawl();
+        switch ($_SERVER['REQUEST_METHOD']) {
+            case 'GET':
+
+                $parameters = [];
+                foreach ($_GET as $name => $value) {
+                    $value = trim($value);
+                    if ('' === $value) {
+                        continue;
+                    }
+                    $parameters[$name] = $value;
+                }
+
+                echo $this->proxy($parameters);
+                break;
+
+            case 'POST':
+
+                $data = json_decode(file_get_contents('php://input'));
+
+                echo $this->preload($data);
+                break;
+        }
+    }
+
+    /**
+     * proxy
+     *
+     * @param array $parameters
+     *
+     * @return null|string
+     */
+    private function proxy(array $parameters):? string
+    {
+        $data = (new Proxy($parameters))->crawl();
 
         foreach ($data['headers'] as $name => $value) {
             header($name . ': ' . $value);
@@ -54,6 +65,22 @@ class Kernel
             http_response_code(204);
         }
 
-        echo $data['body'];
+        header('X-Robots-Tag: noindex, nofollow', true);
+
+        return $data['body'];
+    }
+
+    /**
+     * preload
+     *
+     * @param array $data
+     *
+     * @return null|string
+     */
+    private function preload(array $data):? string
+    {
+        (new Gearman())->client($data);
+
+        return null;
     }
 }
