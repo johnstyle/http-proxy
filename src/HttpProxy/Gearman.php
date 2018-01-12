@@ -26,6 +26,10 @@ class Gearman
         $client = new \GearmanClient();
         $this->setServers($client);
         foreach ($items as $parameters) {
+            if (!is_array($parameters)
+                || !isset($parameters['url'])) {
+                continue;
+            }
             $client->doBackground(static::CRAWLER_FUNCTION, json_encode($parameters));
         }
     }
@@ -39,7 +43,8 @@ class Gearman
         $this->setServers($worker);
         $worker->addFunction(static::CRAWLER_FUNCTION, function (\GearmanJob $job) {
             $parameters = json_decode($job->workload(), true);
-            (new Proxy($parameters))->crawl(random_int(60, 3600 * 12));
+            $parameters['sleep'] = random_int(60, 3600 * 12);
+            (new Proxy($parameters))->crawl();
         });
 
         while ($worker->work()) {

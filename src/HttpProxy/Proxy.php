@@ -29,11 +29,9 @@ class Proxy
     /**
      * crawl
      *
-     * @param int $sleep
-     *
      * @return array|null
      */
-    public function crawl(int $sleep = 0)
+    public function crawl()
     {
         if (!$this->isValidUrl()) {
             return null;
@@ -41,8 +39,8 @@ class Proxy
 
         $url = $this->getParameter('url');
 
-        return (new Cache($url))->getData(function () use ($url, $sleep) {
-            sleep($sleep);
+        return (new Cache($url))->getData(function () use ($url) {
+            sleep((int) $this->getParameter('sleep', 0));
 
             try {
 
@@ -85,13 +83,14 @@ class Proxy
     /**
      * getParameter
      *
-     * @param $name
+     * @param string $name
+     * @param mixed  $default
      *
-     * @return null|string
+     * @return mixed
      */
-    private function getParameter($name):? string
+    private function getParameter(string $name, $default = null):? string
     {
-        return $this->parameters[$name] ?? null;
+        return $this->parameters[$name] ?? $default;
     }
 
     /**
