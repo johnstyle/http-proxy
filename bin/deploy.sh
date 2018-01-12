@@ -28,7 +28,7 @@ echo -e "\e[0;90m---------------------------------------\e[0;90m"
 # Mise à jour Composer
 echo -e "\e[0;32m[✓] Update composer.phar\e[0;90m"
 echo -e "\e[0;90m---------------------------------------\e[0;90m"
-php "/opt/composer.phar" --no-dev --optimize-autoloader --classmap-authoritative --no-plugins -v install
+php "./vendor/bin/composer" --no-dev --optimize-autoloader --classmap-authoritative --no-plugins -v install
 echo -e "\e[0;90m---------------------------------------\e[0;90m"
 
 # Redémarage du serveur web
