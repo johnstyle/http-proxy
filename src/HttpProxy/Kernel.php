@@ -47,6 +47,8 @@ class Kernel
             header($name . ': ' . $value);
         }
 
+        header('X-Robots-Tag: noindex, nofollow', true);
+
         echo $data['body'];
     }
 }
