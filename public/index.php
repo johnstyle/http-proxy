@@ -7,5 +7,8 @@ define('CACHE_DIR', ROOT_DIR . '/var/cache');
 
 require ROOT_DIR . '/vendor/autoload.php';
 
-(new Dotenv\Dotenv(ROOT_DIR))->load();
+if (file_exists(ROOT_DIR . '/.env')) {
+    (new Dotenv\Dotenv(ROOT_DIR))->load();
+}
+
 (new Kernel())->send();
