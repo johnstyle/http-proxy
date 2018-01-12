@@ -57,7 +57,7 @@ class Proxy
                     return null;
                 }
 
-                return $response->raw_body;
+                return $response;
 
             } catch (Exception $e) {
                 return null;

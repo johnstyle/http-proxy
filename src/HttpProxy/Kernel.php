@@ -10,8 +10,8 @@ namespace HttpProxy;
  */
 class Kernel
 {
-    /** @var Proxy $httpProxy */
-    private $httpProxy;
+    /** @var Proxy $proxy */
+    private $proxy;
 
     /**
      * Kernel constructor.
@@ -27,7 +27,7 @@ class Kernel
             $parameters[$name] = $value;
         }
 
-        $this->httpProxy = new Proxy($parameters);
+        $this->proxy = new Proxy($parameters);
     }
 
     /**
@@ -35,14 +35,18 @@ class Kernel
      */
     public function send()
     {
-        $data = $this->httpProxy->crawl();
-
-        if (1 === (int) $data['cache']) {
-            header('X-Proxy-Cache: 1');
+        $headers = getallheaders();
+        if (!isset($headers['X-Token'])
+            || $headers['X-Token'] !== $_SERVER['PROXY_TOKEN']) {
+            return;
         }
 
-        header('X-Proxy-Date: ' . $data['date']);
+        $data = $this->proxy->crawl();
 
-        echo $data['content'];
+        foreach ($data['headers'] as $name => $value) {
+            header($name . ': ' . $value);
+        }
+
+        echo $data['body'];
     }
 }

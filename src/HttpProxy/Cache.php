@@ -10,9 +10,6 @@ namespace HttpProxy;
  */
 class Cache
 {
-    /** @var string $url */
-    private $url;
-
     /** @var string $hash */
     private $hash;
 
@@ -27,7 +24,6 @@ class Cache
      */
     public function __construct(string $url, int $cacheDays = 30)
     {
-        $this->url = $url;
         $this->hash = md5($url);
         $this->cacheDays = $cacheDays;
     }
@@ -44,19 +40,32 @@ class Cache
         $filename = $this->getFilename();
 
         $data = [
-            'cache'   => false,
-            'date'    => (new \DateTime())->format('c'),
-            'content' => null,
+            'headers' => [
+                'Content-Type'  => null,
+                'X-Proxy-Cache' => 0,
+                'X-Proxy-Date'  => (new \DateTime())->format('c'),
+            ],
+            'body' => null,
         ];
 
         if (file_exists($filename)
             || filemtime($filename) > time() - (3600 * 24 * $this->cacheDays)) {
-            $data['cache']   = true;
-            $data['date']    = (new \DateTime())->setTimestamp(filemtime($filename))->format('c');
-            $data['content'] = file_get_contents($filename);
-        } else {
-            $data['content'] = $callback();
-            file_put_contents($filename, $data['content']);
+            $data['body'] = file_get_contents($filename);
+            $firstLine = strpos($data['body'], "\n");
+            $data['headers'] = [
+                'Content-Type'  => substr($data['body'], 0, $firstLine),
+                'X-Proxy-Cache' => 1,
+                'X-Proxy-Date'  => (new \DateTime())->setTimestamp(filemtime($filename))->format('c'),
+            ];
+            $data['body'] = substr($data['body'], $firstLine + 1);
+        } elseif($response = $callback()) {
+            $data['body'] = $response->body;
+            $data['headers']['Content-Type'] = $response->headers['Content-Type'];
+            file_put_contents($filename, $data['headers']['Content-Type'] . "\n" . $data['body']);
+        }
+
+        if ('' === (string) $data['headers']['Content-Type']) {
+            $data['headers']['Content-Type'] = 'plain/text';
         }
 
         return $data;
@@ -69,6 +78,13 @@ class Cache
      */
     private function getFilename(): string
     {
-        return CACHE_DIR . '/' . $this->hash;
+        $directory = chunk_split(substr($this->hash, 0, 6), 1, '/');
+        $directory = CACHE_DIR . '/' . $directory;
+
+        if (!is_dir($directory)) {
+            mkdir($directory, 0775, true);
+        }
+
+        return $directory . '/' . $this->hash;
     }
 }
