@@ -13,19 +13,14 @@ class Cache
     /** @var string $hash */
     private $hash;
 
-    /** @var int $cacheDays */
-    private $cacheDays;
-
     /**
      * Cache constructor.
      *
      * @param string $url
-     * @param int    $cacheDays
      */
-    public function __construct(string $url, int $cacheDays = 30)
+    public function __construct(string $url)
     {
         $this->hash = md5($url);
-        $this->cacheDays = $cacheDays;
     }
 
     /**
@@ -34,6 +29,7 @@ class Cache
      * @param callable $callback
      *
      * @return array
+     * @throws \Exception
      */
     public function getData(callable $callback): array
     {
@@ -49,7 +45,7 @@ class Cache
         $filename = $this->getFilename();
 
         if (file_exists($filename)
-            && filemtime($filename) > time() - (3600 * 24 * $this->cacheDays)) {
+            && filemtime($filename) > time() - (3600 * 24 * random_int(10, 30))) {
             $data['body'] = file_get_contents($filename);
             $firstLine = strpos($data['body'], "\n");
             $data['headers'] = [

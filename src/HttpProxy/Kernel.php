@@ -11,7 +11,9 @@ namespace HttpProxy;
 class Kernel
 {
     /**
-     * send
+     * run
+     *
+     * @throws \Exception
      */
     public function run()
     {
@@ -52,6 +54,7 @@ class Kernel
      * @param array $parameters
      *
      * @return null|string
+     * @throws \Exception
      */
     private function proxy(array $parameters):? string
     {

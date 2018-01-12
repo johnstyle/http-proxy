@@ -30,6 +30,7 @@ class Proxy
      * crawl
      *
      * @return array|null
+     * @throws \Exception
      */
     public function crawl()
     {
