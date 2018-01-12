@@ -35,9 +35,12 @@ class Kernel
      */
     public function send()
     {
+        header('X-Robots-Tag: noindex, nofollow', true);
+
         $headers = getallheaders();
         if (!isset($headers['X-Token'])
             || $headers['X-Token'] !== $_SERVER['PROXY_TOKEN']) {
+            http_response_code(403);
             return;
         }
 
@@ -47,7 +50,9 @@ class Kernel
             header($name . ': ' . $value);
         }
 
-        header('X-Robots-Tag: noindex, nofollow', true);
+        if (!$data['body']) {
+            http_response_code(204);
+        }
 
         echo $data['body'];
     }
