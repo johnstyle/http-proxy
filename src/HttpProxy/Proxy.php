@@ -71,20 +71,15 @@ class Proxy
             }
         });
 
-        $headers = [
-            'Content-Type' => $data['type'] ?? 'plain/text',
-            'X-Proxy-Url'  => $url,
-            'X-Proxy-Date' => $data['date'],
-        ];
-
-        if ($data['cache']) {
-            $headers['X-Proxy-Cache'] = 1;
-            $headers['X-Proxy-Sleep'] = $sleep;
-        }
-
         return [
-            'headers' => $headers,
-            'body'    => $data['body'],
+            'headers' => [
+                'Content-Type'  => $data['type'] ?? 'plain/text',
+                'X-Proxy-Url'   => $url,
+                'X-Proxy-Date'  => $data['date'],
+                'X-Proxy-Sleep' => $data['cache'] ? $sleep : 0,
+                'X-Proxy-Cache' => (int) $data['cache'],
+            ],
+            'body' => $data['body'],
         ];
     }
 
