@@ -101,6 +101,7 @@ class Proxy
      */
     private function getInterface(): string
     {
-        return array_rand(array_map('trim', explode(',', $_SERVER['PROXY_INTERFACES'])));
+        $interfaces = array_map('trim', explode(',', $_SERVER['PROXY_INTERFACES']));
+        return $interfaces[array_rand($interfaces)];
     }
 }
