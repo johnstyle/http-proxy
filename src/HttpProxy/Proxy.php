@@ -39,9 +39,10 @@ class Proxy
         }
 
         $url = $this->getParameter('url');
+        $sleep = (int) $this->getParameter('sleep', 0);
 
-        return (new Cache($url))->getData(function () use ($url) {
-            sleep((int) $this->getParameter('sleep', 0));
+        $data = (new Cache($url))->getData(function () use ($url, $sleep) {
+            sleep($sleep);
 
             try {
 
@@ -69,6 +70,22 @@ class Proxy
                 return null;
             }
         });
+
+        $headers = [
+            'Content-Type' => $data['type'] ?? 'plain/text',
+            'X-Proxy-Url'  => $url,
+            'X-Proxy-Date' => $data['date'],
+        ];
+
+        if ($data['cache']) {
+            $headers['X-Proxy-Cache'] = 1;
+            $headers['X-Proxy-Sleep'] = $sleep;
+        }
+
+        return [
+            'headers' => $headers,
+            'body'    => $data['body'],
+        ];
     }
 
     /**

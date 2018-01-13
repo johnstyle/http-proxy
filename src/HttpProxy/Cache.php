@@ -36,38 +36,30 @@ class Cache
     public function getData(callable $callback): array
     {
         $data = [
-            'headers' => [
-                'Content-Type'  => null,
-                'X-Proxy-Cache' => 0,
-                'X-Proxy-Date'  => (new \DateTime())->format('c'),
-            ],
-            'body' => null,
+            'type'  => null,
+            'date'  => (new \DateTime())->format('c'),
+            'cache' => false,
+            'body'  => null,
         ];
 
         $filename = $this->getFilename();
 
         if (file_exists($filename)
             && filemtime($filename) > time() - (3600 * 24 * random_int(10, 30))) {
-            $data['body'] = file_get_contents($filename);
-            $firstLine = strpos($data['body'], "\n");
-            $data['headers'] = [
-                'Content-Type'  => substr($data['body'], 0, $firstLine),
-                'X-Proxy-Cache' => 1,
-                'X-Proxy-Date'  => (new \DateTime())->setTimestamp(filemtime($filename))->format('c'),
-            ];
-            $data['body'] = substr($data['body'], $firstLine + 1);
+            $data['body']  = file_get_contents($filename);
+            $firstLine     = strpos($data['body'], "\n");
+            $data['type']  = substr($data['body'], 0, $firstLine);
+            $data['cache'] = true;
+            $data['date']  = (new \DateTime())->setTimestamp(filemtime($filename))->format('c');
+            $data['body']  = substr($data['body'], $firstLine + 1);
         } elseif($response = $callback()) {
             /** @var Response $response */
-            $data['body'] = $response->raw_body;
-            $data['headers']['Content-Type'] = is_array($response->headers['Content-Type'])
+            $data['body']  = $response->raw_body;
+            $data['type']  = is_array($response->headers['Content-Type'])
                 ? array_shift($response->headers['Content-Type'])
                 : $response->headers['Content-Type']
             ;
-            file_put_contents($this->getFilename(true), $data['headers']['Content-Type'] . "\n" . $data['body']);
-        }
-
-        if ('' === (string) $data['headers']['Content-Type']) {
-            $data['headers']['Content-Type'] = 'plain/text';
+            file_put_contents($this->getFilename(true), $data['type'] . "\n" . $data['body']);
         }
 
         return $data;
