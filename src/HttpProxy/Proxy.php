@@ -76,7 +76,7 @@ class Proxy
                 'Content-Type'  => $data['type'] ?? 'plain/text',
                 'X-Proxy-Url'   => $url,
                 'X-Proxy-Date'  => $data['date'],
-                'X-Proxy-Sleep' => $data['cache'] ? $sleep : 0,
+                'X-Proxy-Sleep' => !$data['cache'] ? $sleep : 0,
                 'X-Proxy-Cache' => (int) $data['cache'],
             ],
             'body' => $data['body'],
