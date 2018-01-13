@@ -47,11 +47,12 @@ class Cache
         if (file_exists($filename)
             && filemtime($filename) > time() - (3600 * 24 * random_int(10, 30))) {
             $data['body']  = file_get_contents($filename);
-            $firstLine     = strpos($data['body'], "\n");
-            $data['type']  = substr($data['body'], 0, $firstLine);
+            $firstLinePos  = strpos($data['body'], "\n");
+            $metadata      = json_decode(base64_decode(substr($data['body'], 0, $firstLinePos)), true);
+            $data['type']  = $metadata['type'] ?? null;
             $data['cache'] = true;
             $data['date']  = (new \DateTime())->setTimestamp(filemtime($filename))->format('c');
-            $data['body']  = substr($data['body'], $firstLine + 1);
+            $data['body']  = substr($data['body'], $firstLinePos + 1);
         } elseif($response = $callback()) {
             /** @var Response $response */
             $data['body']  = $response->raw_body;
@@ -59,7 +60,12 @@ class Cache
                 ? array_shift($response->headers['Content-Type'])
                 : $response->headers['Content-Type']
             ;
-            file_put_contents($this->getFilename(true), $data['type'] . "\n" . $data['body']);
+            file_put_contents(
+                $this->getFilename(true),
+                base64_encode(json_encode([
+                    'type' => $data['type']
+                ])) . "\n" . $data['body']
+            );
         }
 
         return $data;
