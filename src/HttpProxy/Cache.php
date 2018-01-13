@@ -2,6 +2,8 @@
 
 namespace HttpProxy;
 
+use Unirest\Response;
+
 /**
  * Class Cache
  *
@@ -55,7 +57,8 @@ class Cache
             ];
             $data['body'] = substr($data['body'], $firstLine + 1);
         } elseif($response = $callback()) {
-            $data['body'] = $response->body;
+            /** @var Response $response */
+            $data['body'] = $response->raw_body;
             $data['headers']['Content-Type'] = is_array($response->headers['Content-Type'])
                 ? array_shift($response->headers['Content-Type'])
                 : $response->headers['Content-Type']
