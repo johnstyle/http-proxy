@@ -40,15 +40,16 @@ class Proxy
 
         $url = $this->getParameter('url');
         $sleep = (int) $this->getParameter('sleep', 0);
+        $interface = $this->getInterface();
 
-        $data = (new Cache($url))->getData(function () use ($url, $sleep) {
+        $data = (new Cache($url))->getData(function () use ($url, $sleep, $interface) {
             sleep($sleep);
 
             try {
 
                 Request::timeout(5);
                 Request::curlOpts([
-                    CURLOPT_INTERFACE => $this->getInterface(),
+                    CURLOPT_INTERFACE => $interface,
                 ]);
 
                 $response = Request::get($url, [
@@ -73,11 +74,12 @@ class Proxy
 
         return [
             'headers' => [
-                'Content-Type'  => $data['type'] ?? 'plain/text',
-                'X-Proxy-Url'   => $url,
-                'X-Proxy-Date'  => $data['date'],
-                'X-Proxy-Sleep' => !$data['cache'] ? $sleep : 0,
-                'X-Proxy-Cache' => (int) $data['cache'],
+                'Content-Type'      => $data['type'] ?? 'plain/text',
+                'X-Proxy-Url'       => $url,
+                'X-Proxy-Date'      => $data['date'],
+                'X-Proxy-Sleep'     => !$data['cache'] ? $sleep : 0,
+                'X-Proxy-Cache'     => (int) $data['cache'],
+                'X-Proxy-Interface' => $interface,
             ],
             'body' => $data['body'],
         ];
