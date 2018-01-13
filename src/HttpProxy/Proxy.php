@@ -79,7 +79,7 @@ class Proxy
                 'X-Proxy-Date'      => $data['date'],
                 'X-Proxy-Cache'     => (int) $data['cache'],
                 'X-Proxy-Sleep'     => !$data['cache'] ? $sleep : 0,
-                'X-Proxy-Interface' => $interface,
+                'X-Proxy-Interface' => !$data['cache'] ? $interface : null,
             ],
             'body' => $data['body'],
         ];
