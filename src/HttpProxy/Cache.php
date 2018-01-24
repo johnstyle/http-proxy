@@ -28,12 +28,13 @@ class Cache
     /**
      * getData
      *
-     * @param callable $callback
+     * @param callable    $callback
+     * @param null|string $cacheDays
      *
      * @return array
      * @throws \Exception
      */
-    public function getData(callable $callback): array
+    public function getData(callable $callback, ?string $cacheDays = null): array
     {
         $data = [
             'type'  => null,
@@ -44,8 +45,17 @@ class Cache
 
         $filename = $this->getFilename();
 
-        if (file_exists($filename)
-            && filemtime($filename) > time() - (3600 * 24 * random_int(10, 30))) {
+        if (null !== $cacheDays) {
+            $cacheParameters = explode('-', $cacheDays, 2);
+            $cacheDays = 1 === count($cacheParameters)
+                ? (int) $cacheParameters
+                : random_int((int) $cacheParameters[0], (int) $cacheParameters[1])
+            ;
+        }
+
+        if (null !== $cacheDays
+            && file_exists($filename)
+            && filemtime($filename) > time() - (3600 * 24 * $cacheDays)) {
             $data['body']  = file_get_contents($filename);
             $firstLinePos  = strpos($data['body'], "\n");
             $metadata      = json_decode(base64_decode(substr($data['body'], 0, $firstLinePos)), true);

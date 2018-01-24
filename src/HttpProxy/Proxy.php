@@ -29,10 +29,12 @@ class Proxy
     /**
      * crawl
      *
+     * @param null|string $cacheDays
+     *
      * @return array|null
      * @throws \Exception
      */
-    public function crawl()
+    public function crawl(?string $cacheDays = null)
     {
         if (!$this->isValidUrl()) {
             return null;
@@ -70,7 +72,7 @@ class Proxy
             } catch (Exception $e) {
                 return null;
             }
-        });
+        }, $cacheDays);
 
         return [
             'headers' => [
@@ -79,7 +81,7 @@ class Proxy
                 'X-Proxy-Date'      => $data['date'],
                 'X-Proxy-Cache'     => (int) $data['cache'],
                 'X-Proxy-Sleep'     => !$data['cache'] ? $sleep : 0,
-                'X-Proxy-Interface' => !$data['cache'] ? $interface : null,
+                'X-Proxy-Interface' => !$data['cache'] ? $interface : 'local',
             ],
             'body' => $data['body'],
         ];
