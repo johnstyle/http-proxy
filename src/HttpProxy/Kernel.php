@@ -36,7 +36,7 @@ class Kernel
                     $parameters[$name] = $value;
                 }
 
-                echo $this->proxy($parameters);
+                echo $this->proxy($parameters, isset($headers['X-Cache-Days']) ? $headers['X-Cache-Days'] : null);
                 break;
 
             case 'POST':
@@ -51,14 +51,15 @@ class Kernel
     /**
      * proxy
      *
-     * @param array $parameters
+     * @param array       $parameters
+     * @param null|string $cacheDays
      *
      * @return null|string
      * @throws \Exception
      */
-    private function proxy(array $parameters):? string
+    private function proxy(array $parameters, ?string $cacheDays = null):? string
     {
-        $data = (new Proxy($parameters))->crawl();
+        $data = (new Proxy($parameters))->crawl($cacheDays);
 
         foreach ($data['headers'] as $name => $value) {
             header($name . ': ' . $value);
